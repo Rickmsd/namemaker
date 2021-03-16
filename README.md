@@ -129,6 +129,8 @@ The `name_len_func` is a function that measures some property of a name (length,
 
 The final argument in `make_name_set` is `clean_up`.  This determines if the training data will be cleaned up using `namemaker.clean`, described in the “Finding and processing training data” section.
 
+Since making a NameSet involves lots of pre-calculation and (possibly) reading data from the disk, it's recommended that you only do it once as a setup step.
+
 # Making names
 Now that you've used `make_name_set` to make a NameSet out of your training data, it's time to make a random name.  The `NameSet.make_name` method has a lot of inputs, but most of them are set to “just work” by default.  The possible inputs to `make_name` and their default values are shown below:
 

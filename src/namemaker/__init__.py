@@ -1,6 +1,7 @@
 ''' Module for using Markov chains to generate random names.'''
 import random
 import warnings
+import pkgutil
 
 ## NOTE: name data should be saved as txt files with each entry on its own line
 
@@ -9,6 +10,7 @@ DEFAULT_N_CANDIDATES = 2
 DEFAULT_ORDER = 3
 DEFAULT_NAME_LEN_FUNC = len
 MIN, MAX, AVG = range(3)
+_BUILTIN_NAMES_FOLDER = 'name data'
 _PASS_EVERYTHING = lambda name: True
 _END = None     # denotes the end of a name in a Markov chain
 
@@ -519,18 +521,29 @@ def get_names_from_file(file_name):
         If no file extension is included, this function assumes the extension is .txt'''
     def get_names(file_name, encoding):
         with open(file_name, 'r', encoding = encoding) as f:
-            names = [line.strip('\n') for line in f.readlines()]    # get rid of the '\n' from the end of each line
+            names = [line.strip('\n\r\t') for line in f.readlines()]    # get rid of any newline, carriage return, and tab characters
         return names
 
-    if '.' not in file_name:                                        # if user forgot to include file extension
-        file_name += '.txt'                                         # assume it's a text file
+    if '.' not in file_name:                                            # if user forgot to include file extension
+        file_name += '.txt'                                             # assume it's a text file
 
     try:
-        names = get_names(file_name, 'utf-8')                       # use utf-8 encoding so that unicode characters are read properly.
-    except UnicodeDecodeError:                                      # if the file wasn't encoded in UTF-8, fall back to latin-1
-        names = get_names(file_name, 'latin-1')                     # This is an easy mistake to make if saving from excel
+        names = get_names(file_name, 'utf-8')                           # use utf-8 encoding so that unicode characters are read properly.
+    except UnicodeDecodeError:                                          # if the file wasn't encoded in UTF-8, fall back to latin-1
+        names = get_names(file_name, 'latin-1')                         # This is an easy mistake to make if saving from excel
         warnings.warn('Failed to load Unicode text. Falling back to latin-1 encoding. Some symbols may not be shown properly.', category = UnicodeWarning, stacklevel = 2)
+    except FileNotFoundError:
+        names = get_built_in_names(file_name)
     return names
+
+def get_built_in_names(file_name):
+    ''' Gets names from a text file that was pre-packaged with this module'''
+    file_name = f'{_BUILTIN_NAMES_FOLDER}/{file_name}'
+    if not file_name.endswith('.txt'):
+        file_name += '.txt'
+    name_bytes = pkgutil.get_data(__name__, file_name)
+    names = name_bytes.decode('utf-8').split('\n')                      # built-in name data will always be in utf-8 format
+    return [n.strip('\n\r\t') for n in names]                           # get rid of any newline, carriage return, and tab characters
 
 def clean(names):
     ''' Cleans extra symbols from the start or end of the names, and removes blank names.
