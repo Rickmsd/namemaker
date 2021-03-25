@@ -132,7 +132,7 @@ The final argument in `make_name_set` is `clean_up`.  This determines if the tra
 Since making a NameSet involves lots of pre-calculation and (possibly) reading data from the disk, it's recommended that you only do it once as a setup step.
 
 # Making names
-Now that you've used `make_name_set` to make a NameSet out of your training data, it's time to make a random name.  The `NameSet.make_name` method has a lot of inputs, but most of them are set to “just work” by default.  The possible inputs to `make_name` and their default values are shown below:
+Now that you've used `make_name_set` to make a NameSet out of your training data, it's time to make some random names.  The `NameSet.make_name` method has a lot of inputs, but most of them are set to “just work” by default.  The possible inputs to `make_name` and their default values are shown below:
 
 ```python
 exclude_real_names = True
@@ -175,7 +175,7 @@ It is possible to ban certain words from appearing in the names made by namemake
 # Finding and processing training data
 The main advantage of namemaker is its ability to emulate the “sound” of its training data, and, by extension, its customizability by providing your own training data.  The internet is full of lists of things.  A helpful trick is to copy an entire list or table of names into a spreadsheet program like Excel, delete unwanted columns and rows, then save as a tab-delimited text file.  Namemaker expects text files to contain one name per row.
 
-When importing this data into NameMaker, there are several options for cleaning it of unwanted junk.  The default behavior used by `make_name_set` is to first strip off any non-alphanumeric symbols from the beginning and end of each name, then remove any empty names.  There may be cases when you want to avoid this behavior.  For instance, in a training set of band names, “Wham!” would be reduced to “Wham”, robbing you of the opportunity to generate names that end in an exclamation point.  In a case like this, you can call `make_name_set` with `clean = False`.  You can also do the clean-up step manually for greater control, as shown below:
+When importing this data into namemaker, there are several options for cleaning it of unwanted junk.  The default behavior used by `make_name_set` is to first strip off any non-alphanumeric symbols from the beginning and end of each name, then remove any empty names.  There may be cases when you want to avoid this behavior.  For instance, in a training set of band names, “Wham!” would be reduced to “Wham”, robbing you of the opportunity to generate names that end in an exclamation point.  In a case like this, you can call `make_name_set` with `clean = False`.  You can also do the clean-up step manually for greater control, as shown below:
 
 ```python
 my_names = get_names_from_file('my name file')
@@ -226,6 +226,10 @@ NameSets have some other methods to modify themselves, too:
 
 `add_to_history(name_s)`:  Adds the input name or collection of names to the NameSet’s history.
 
+`link_histories(*other_name_sets)`:  (New in version 1.1) Links the history of the NameSet to the histories of all the other_name_sets.  Adding names to the history of one will add them to all the linked histories.  This is useful if you have several NameSets that might generate similar names, but don't want any repeated names within the group.  This method breaks any existing linked histories in the NameSet and the other_name_sets.
+
+`unlink_history()`:  (New in version 1.1) Breaks any linked histories that the NameSet might have, without breaking the links among other NameSets in the linked group.
+
 # Warnings
 Namemaker uses a few custom warnings to avoid interfering with any warning filters you've set up in your own code.
 
@@ -249,7 +253,7 @@ OrderWarning: Adding NameSet of order 3 to NameSet of order 2. Result will be of
 Namemaker uses Python's built-in `random` module, but uses its own instance of `random.Random` to avoid interfering with the state of the `random` module.  You can access the RNG with the `namemaker.get_rng` function.  Being an instance of `random.Random`, it supports all the same methods as the `random` module itself, like `getstate`, `setstate`, and `seed`.  You can also replace the default RNG with your own RNG, using `namemaker.set_rng(my_rng)`.  The only requirement on `my_rng` is that it has a `choice` method that takes in a list and returns a single element from that list.
 
 # Cookbook
-Here are some different uses of namemaker to give you an idea of how the inputs can be varied for different results.
+Here are some different uses of namemaker to provide an idea of how the inputs can be varied for different results.
 
 Planet names using the built-in Greek mythology data:
 
@@ -333,13 +337,13 @@ Les Mee
 ```
 
 # Sources of built-in training data
-[1] BABY NAMES IN AMERICA: Most Popular Baby Names for Boys in America, *NameCensus.com*, access at https://namecensus.com/baby_names/boys250.html
+[1] BABY NAMES IN AMERICA: Most Popular Baby Names for Boys in America, *NameCensus.com*, accessed at https://namecensus.com/baby_names/boys250.html
 
-[2] BABY NAMES IN AMERICA: Most Popular Baby Names for Girls in America, *NameCensus.com*, access at https://namecensus.com/baby_names/girls250.html
+[2] BABY NAMES IN AMERICA: Most Popular Baby Names for Girls in America, *NameCensus.com*, accessed at https://namecensus.com/baby_names/girls250.html
 
 [3] What is the most common last name in the United States?, *NameCensus.com*, accessed at https://namecensus.com/data/1000.html
 
-[4] List of towns in England, *Wikipedia*, access at https://en.wikipedia.org/wiki/List_of_towns_in_England
+[4] List of towns in England, *Wikipedia*, accessed at https://en.wikipedia.org/wiki/List_of_towns_in_England
 
 [5] List of towns and boroughs in Pennsylvania, *Wikipedia*, accessed at https://en.wikipedia.org/wiki/List_of_towns_and_boroughs_in_Pennsylvania
 
