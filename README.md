@@ -146,7 +146,7 @@ validation_func = None
 
 Starting simple, `exclude_real_names` will keep `make_name` from outputting any name that's already in your training data.  For instance, a NameSet made with the included `male first names.txt` file won't make the name “John” if `exclude_real_names = True`.
 
-The next two inputs, `exclude_history` and `add_to_history`, are closely related.  Each NameSet keeps track of the names it's already made, so you don't have to worry about repeats.  When using `add_to_history = True`, the NameSet will remember the name returned by`make_name`.  If `exclude_history` is True, `make_name` won't make any name that's already remembered in the NameSet's history.
+The next two inputs, `exclude_history` and `add_to_history`, are closely related.  By default, each NameSet keeps track of the names it's already made to avoid repeats.  When using `add_to_history = True`, the NameSet will remember the name returned by`make_name`.  If `exclude_history` is True, `make_name` won't make any name that's already remembered in the NameSet's history.
 
 Internally, `make_name` actually generates a few names and picks what it thinks is the best one.  By default, it chooses the name closest to the average length of the training data, as measured by the NameSet's `name_len_func`.  The number of name candidates it chooses from is specified by `n_candidates`.  The default is 2 because it allows a variety of name lengths to get through, while still weeding out the extremely long or short outliers.  Increasing `n_candidates` reduces the variance in name length (or whatever property is checked by `name_len_func`).
 
@@ -160,17 +160,15 @@ There may be a number of limits you want to impose on the names created by `make
 * Exclude a common misspelling.  Ex:  `validation_func = lambda name: not name.endswith('vill')` excludes any town names ending in “vill” instead of “ville”.
 * Exclude two-word names:  `validation_func = lambda name: ' ' not in name`
 
-You can also ban certain words from appearing in the names returned by `make_name`.  See the section “Banning words”.
+## Banning words
+You can ban certain words from appearing in your names.  The namemaker module has a global set of banned words, which is empty by default.  You can set the banned words or add words to the banned word set with the `set_banned_words` or `add_banned_words` functions.  `get_banned_words` lets you check your banned words.  Banned words are not case sensitive, and `NameSet.make_name` will not return a name that contains a banned word.
 
-If `make_name` fails to come up with a valid name, it's usually because of one or more of the following reasons:
+## Reasons make_name might fail
 
 * There are too few names in the training data, and `exclude_real_names = True`.  If there isn't enough variety in the possible letter combinations, a Markov chain may only be able to make names that are already in the training data.
 * Your `validation_func` is too restrictive.
-* Your set of banned words is too restrictive.  See below for more info.
+* Your set of banned words is too restrictive.
 * There are a lot of names in the NameSet's history, and `exclude_history = True`.  This is not very likely, as a NameSet with a reasonable amount of training data can generate over 10 unique names per training name.  Example: At 277 names, `Greek mythology.txt` is the shortest built-in training data file, and it can generate about 3800 names (with default settings) before failing from a full history.
-
-# Banning words
-It is possible to ban certain words from appearing in the names made by namemaker.  The namemaker module has a global set of banned words, which is empty by default.  You can set the banned words or add words to the banned word set with the `set_banned_words` or `add_banned_words` functions.  `get_banned_words` lets you check your banned words.  Banned words are not case sensitive, and no name that contains a banned word will be returned by `NameSet.make_name`.
 
 # Finding and processing training data
 The main advantage of namemaker is its ability to emulate the “sound” of its training data, and, by extension, its customizability by providing your own training data.  The internet is full of lists of things.  A helpful trick is to copy an entire list or table of names into a spreadsheet program like Excel, delete unwanted columns and rows, then save as a tab-delimited text file.  Namemaker expects text files to contain one name per row.
