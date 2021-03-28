@@ -689,25 +689,7 @@ def estimate_syllables(name):
 
     return n_syllables
 
-def sample(names, n = 20, **kwargs):
-    ''' Prints a sample of n names based on the input collection of names.
-        Uses the input **kwargs in make_name_set and in calls to
-        NameSet.make_name.
-        The intent of this function is to get a quick idea of how
-        different inputs affect the final result.
-        It is not intended for use in production code.
-        Values specified in **kwargs are prioritized,
-        followed by attributes of the input NameSet (if names is a NameSet),
-        followed by default values.
-        This function operates on a copy of names,
-        so the input list, set, or NameSet of names will not be modified.
-        
-        INPUTS:
-        names:    Any collection of names, a NameSet, or the name of a
-                  file where names are stored.
-        n:        int, the number of samples to print.
-        **kwargs: Any keyword arguments that are accepted by make_name_set or
-                  NameSet.make_name'''
+def _make_name_set_for_user_testing(names, **kwargs):
     if type(names) is NameSet:
         if 'order' in kwargs and kwargs['order'] != names.get_order():      # message if kwargs conflicts with NameSet attributes
             print(f'Input NameSet has order {names.get_order()}, but input kwargs specified order {kwargs["order"]}. Using {kwargs["order"]}.')
@@ -728,12 +710,93 @@ def sample(names, n = 20, **kwargs):
     clean_up = kwargs.pop('clean_up', True)     # The default value for 'clean_up' is based on the default in make_name_set
     name_set = make_name_set(names, order, name_len_func, clean_up)
 
-    if type(names) is NameSet and list(names) != list(name_set):
-        print('These names were generated with a cleaned-up version of your input NameSet.\n'
-              'To suppress this behavior, use the keyword argument clean_up = False')
+    if type(names) is NameSet:
+        if list(names) != list(name_set):
+            print('These names were generated with a cleaned-up version of your input NameSet.\n'
+                  'To suppress this behavior, use the keyword argument clean_up = False')
+        history = names.get_history()
+        if history:
+            print(f'The input NameSet already has {len(history)} names in its history.')
+            name_set.add_to_history(history)    # stay faithful to the input NameSet
 
+    return name_set, kwargs                     # return the kwargs so the calling function doesn't have to get rid of the kwargs that were popped
+
+def sample(names, n = 20, **kwargs):
+    ''' Prints a sample of n names based on the input collection of names.
+        Uses the input **kwargs in make_name_set and in calls to
+        NameSet.make_name.
+        The intent of this function is to get a quick idea of how
+        different inputs affect the final result.
+        It is not intended for use in production code.
+        Values specified in **kwargs are prioritized,
+        followed by attributes of the input NameSet (if names is a NameSet),
+        followed by default values.
+        This function operates on a copy of names,
+        so the input list, set, or NameSet of names will not be modified.
+        
+        INPUTS:
+        names:    Any collection of names, a NameSet, or the name of a
+                  file where names are stored.
+        n:        int, the number of samples to print.
+        **kwargs: Any keyword arguments that are accepted by make_name_set or
+                  NameSet.make_name'''
+
+    name_set, kwargs = _make_name_set_for_user_testing(names, **kwargs)
     for i in range(n):
         print(name_set.make_name(**kwargs))
+
+def stress_test(names, **kwargs):
+    ''' Generates names until NameSet.make_name fails once, then prints
+        the number of names generated compared to the number
+        of names in the training data.
+        Uses the input **kwargs in make_name_set and in calls to
+        NameSet.make_name.
+        It can take several seconds or minutes before make_name fails,
+        if it ever does.
+        Cancelling this function early will still display the test results.
+        The intent of this function is to judge how many names can be
+        generated from the inputs before no more can be made without repeats.
+        I.e. to see how long it takes to fill up a NameSet's history.
+        It is not intended for use in production code.
+        Values specified in **kwargs are prioritized,
+        followed by attributes of the input NameSet (if names is a NameSet),
+        followed by default values.
+        This function operates on a copy of names,
+        so the input list, set, or NameSet of names will not be modified.
+        
+        INPUTS:
+        names:    Any collection of names, a NameSet, or the name of a
+                  file where names are stored.
+        **kwargs: Any keyword arguments that are accepted by make_name_set or
+                  NameSet.make_name
+                  Note: Setting add_to_history = False will mess up unique
+                  name reporting.'''
+    name_set, kwargs = _make_name_set_for_user_testing(names, **kwargs)
+    if name_set.get_history():
+        print('The test will run on a copy of the NameSet with no history.')
+    name_set.clear_history()
+
+    if len(name_set) == 0:                      # insanity check
+        print('Cannot generate any names from an empty NameSet.')
+        return
+
+    n_training = len(name_set)
+    n_made = 0
+    try:
+        while name_set.make_name(**kwargs):     # make names until there's a failure
+            n_made += 1
+    except KeyboardInterrupt:
+        print('The test was cancelled before a failure occurred.')
+    n_unique = len(name_set.get_history())
+
+    if not kwargs.get('add_to_history', True):
+        print('Info on unique generated names will not be accurate'
+              '\nbecause add_to_history is False.')
+    print(f'Training names: {n_training}')
+    print(f'Unique generated names: {n_unique}')
+    print(f'Total generated names: {n_made}')
+    print(f'Generated names per training name: {round(n_made/n_training, 1)}')
+    print(f'Percent of generated names that are unique: {round(100*n_unique/n_made, 1)}%')
 
 def is_clean(name, banned_words):
     ''' Returns True if the name is clean,

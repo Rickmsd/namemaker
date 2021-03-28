@@ -1,5 +1,5 @@
 # What is namemaker?
-Namemaker is a random name generator.  Use it to procedurally create names for places and characters in a game, or to break through writer's block while trying to come up with your own names.  Input your own training data to make any kind of names you want.
+Namemaker is a random name generator.  Use it to procedurally create names for places and characters in a game, or to break through writer's block while trying to come up with handcrafted names.  Input your own training data to make any kind of names you want.
 
 # How to install
 Use pip in your command line.
@@ -162,12 +162,12 @@ There may be a number of limits you want to impose on the names created by `make
 
 You can also ban certain words from appearing in the names returned by `make_name`.  See the section “Banning words”.
 
-If `make_name` fails to come up with a valid name, it's usually the result of one or more of the following reasons:
+If `make_name` fails to come up with a valid name, it's usually because of one or more of the following reasons:
 
 * There are too few names in the training data, and `exclude_real_names = True`.  If there isn't enough variety in the possible letter combinations, a Markov chain may only be able to make names that are already in the training data.
-* There are a lot of names in the NameSet's history, and `exclude_history = True`.  Try calling `NameSet.clear_history`.
 * Your `validation_func` is too restrictive.
 * Your set of banned words is too restrictive.  See below for more info.
+* There are a lot of names in the NameSet's history, and `exclude_history = True`.  This is not very likely, as a NameSet with a reasonable amount of training data can generate over 10 unique names per training name.  Example: At 277 names, `Greek mythology.txt` is the shortest built-in training data file, and it can generate about 3800 names (with default settings) before failing from a full history.
 
 # Banning words
 It is possible to ban certain words from appearing in the names made by namemaker.  The namemaker module has a global set of banned words, which is empty by default.  You can set the banned words or add words to the banned word set with the `set_banned_words` or `add_banned_words` functions.  `get_banned_words` lets you check your banned words.  Banned words are not case sensitive, and no name that contains a banned word will be returned by `NameSet.make_name`.
@@ -252,23 +252,28 @@ OrderWarning: Adding NameSet of order 3 to NameSet of order 2. Result will be of
 # Managing the Random Number Generator
 Namemaker uses Python's built-in `random` module, but uses its own instance of `random.Random` to avoid interfering with the state of the `random` module.  You can access the RNG with the `namemaker.get_rng` function.  Being an instance of `random.Random`, it supports all the same methods as the `random` module itself, like `getstate`, `setstate`, and `seed`.  You can also replace the default RNG with your own RNG, using `namemaker.set_rng(my_rng)`.  The only requirement on `my_rng` is that it has a `choice` method that takes in a list and returns a single element from that list.
 
+# Misc. other functions
+`estimate_syllables(name)`:  Returns an estimate of how many syllables are in a string.  It's only an estimate, but gets pretty close for most strings.  It can be used as a `name_len_func`.
+
+`stress_test(names, **kwargs)`:  Similar to sample, but instead of printing names, it runs NameSet.make_name until it fails to make a name, then prints info about how many names were made compared to the number of names in the training data.  It probably isn't of much practical use, as most NameSets will generate thousands of names before failing.  Its main purpose is to show that most training data can generate more than enough names for practical purposes, even when avoiding repeats.
+
 # Cookbook
 Here are some different uses of namemaker to provide an idea of how the inputs can be varied for different results.
 
 Planet names using the built-in Greek mythology data:
 
 ```python
->>> namemaker.sample('Greek mythology', n = 10)
-Tereidon
-Laomedes
-Daeda
-Athaea
-Aris
-Callios
-Typheus
-Hyperides
-Pelia
-Argones
+>>> sample('Greek mythology', n = 10, order = 2)
+Hypnonus
+Daritracus
+Elegon
+Ancalias
+Amphous
+Priama
+Hestes
+Iacis
+Iphimerope
+Endis
 ```
 
 Short and punchy town names:
@@ -290,19 +295,19 @@ Glen
 Greath
 ```
 
-Absurdly pompous town names.  The `validation_func` is preventing odd combinations of prepositions.  You may find it necessary to add others if you use this recipe for real:
+Absurd town names.  The `validation_func` is preventing odd combinations of prepositions.  You may find it necessary to add others if you use this recipe for real:
 
 ```python
 >>> namemaker.sample('England towns', n = 10,
+       n_candidates = 20,  # Make lots of candidates and choose the longest one
        pref_candidate = namemaker.MAX,
-       n_candidates = 20,
        validation_func = lambda name: not [x for x in ['on-upon',
-                               'upon-on',
-                               'on-by',
-                               'by-on',
-                               'in-on',
-                               'on-in'] if x in name]
-                       and not name.endswith(' and'))
+                                                       'upon-on',
+                                                       'on-by',
+                                                       'by-on',
+                                                       'in-on',
+                                                       'on-in'] if x in name]
+                                      and not name.endswith(' and'))
 Eastleby-in-Furntworthwellingham
 Whitnes-upon-Cleobury
 Royal Leamingdenham
@@ -315,15 +320,15 @@ New Minsterton Spa
 Madebroughbridge
 ```
 
-Fantastical- or evil-sounding item names (e.g. “The sword of ...”):
+Fantastical or evil-sounding item names (e.g. “The Sword of ...”):
 
 ```python
 >>> namemaker.sample('PA towns', n = 10,
          order = 1,
-         name_len_func = lambda name: len([n for n in name if n not in 'AEIOUaeiou']),
-         pref_candidate = namemaker.MAX, # maximizing consonants
+         name_len_func = lambda name: len([n for n in name if n not in 'AEIOUaeiou']), # don't count vowels toward name length
+         pref_candidate = namemaker.MAX,                                       # maximize consonants
          validation_func = lambda name: 4 < len(name) <= 8
-                and [n for n in name if n in 'aeiou']) # make sure there's a vowel in there
+                                        and [n for n in name if n in 'aeiou']) # make sure there's a vowel in there somewhere
 Fildron
 Sootostz
 Cilllch
