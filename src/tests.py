@@ -863,6 +863,39 @@ class NameSetManipulationTests(unittest.TestCase):
         self.n1.clear_history()
         self.assertEqual(self.n1._history, set())
 
+    def test_link_histories(self):
+        self.n1.link_histories(self.n2, self.n3)
+        self.assertIs(self.n1._history, self.n2._history)
+        self.assertIs(self.n1._history, self.n3._history)
+        self.assertEqual(self.n1._history, set(test_names_1 + test_names_2 + test_names_3))
+
+        self.n1.link_histories(self.n4)
+        self.assertIs(self.n1._history, self.n4._history)                                       # linked to new NameSet
+        self.assertIsNot(self.n1._history, self.n2._history)                                    # no longer linked to original group
+        self.assertEqual(self.n1._history, set(test_names_1 + test_names_2 + test_names_3 + test_names_4))  # kept the original group's history plus this new NameSet's history
+        self.assertIs(self.n2._history, self.n3._history)                                       # didn't unlink the other members of the original group
+        self.assertEqual(self.n2._history, set(test_names_1 + test_names_2 + test_names_3))     # didn't change the original group's history
+
+        self.n1.add_to_history('hi')
+        self.assertIn('hi', self.n4._history)                                                   # make sure adding to the history of one adds to all
+        self.n1.clear_history()
+        self.assertEqual(self.n4._history, set())                                               # make sure clearing one clears all
+
+    def test_unlink_history(self):
+        self.n1.link_histories(self.n2, self.n3)
+        self.n1.unlink_history()
+        self.assertIsNot(self.n1._history, self.n2._history)                                    # make sure it's not linked to the original group any more
+        self.assertIs(self.n2._history, self.n3._history)                                       # didn't unlink the other members of the original group
+        self.assertEqual(self.n2._history, set(test_names_1 + test_names_2 + test_names_3))     # didn't change the original group's history
+        self.assertEqual(self.n2._history, set(test_names_1 + test_names_2 + test_names_3))     # didn't change its own history
+
+    def test_linked_history_copy(self):
+        self.n1.link_histories(self.n2)
+        copy_set = self.n1.copy()
+        self.assertIs(self.n1._history, self.n2._history)
+        self.assertIsNot(copy_set._history, self.n2._history)
+        self.assertEqual(self.n1._history, copy_set._history)
+
 class LoadingDataTests(unittest.TestCase):
     def test_make_name_set(self):
         names = ['name1', '', ' name2-', '$']
@@ -967,8 +1000,44 @@ class RNGTests(unittest.TestCase):
         new_rng = random.Random()
         namemaker.set_rng(new_rng)
         self.assertIs(new_rng, namemaker.rng)
-    
 
+class MiscTests(unittest.TestCase):
+    def test_sample(self):
+        pass    ## TODO: figure out how to test printed output
+
+    def test_stress_test(self):
+        pass    ## TODO: figure out how to test printed output
+
+    def test_estimate_syllables(self):
+        result_1 = namemaker.estimate_syllables('avacado')
+        result_2 = namemaker.estimate_syllables('avacados')
+        self.assertEqual(result_1, result_2)
+        self.assertTrue(3 <= result_1 <= 5)     # don't be off by more than 1 syllable with a 4 syllable word (+/- 25%)
+
+        result = namemaker.estimate_syllables('antidisestablishmentarianism')
+        self.assertTrue(9 <= result <= 15)      # don't be off by more than 3 syllable with a 12 syllable word (+/- 25%)
+
+        self.assertEqual(namemaker.estimate_syllables(''), 0)
+
+        # add the proper number of syllables for each number
+        self.assertEqual(namemaker.estimate_syllables('0'), 2)
+        self.assertEqual(namemaker.estimate_syllables('1'), 1)
+        self.assertEqual(namemaker.estimate_syllables('2'), 1)
+        self.assertEqual(namemaker.estimate_syllables('3'), 1)
+        self.assertEqual(namemaker.estimate_syllables('4'), 1)
+        self.assertEqual(namemaker.estimate_syllables('5'), 1)
+        self.assertEqual(namemaker.estimate_syllables('6'), 1)
+        self.assertEqual(namemaker.estimate_syllables('7'), 2)
+        self.assertEqual(namemaker.estimate_syllables('8'), 1)
+        self.assertEqual(namemaker.estimate_syllables('9'), 1)
+
+        # make sure hyphens and spaces work correctly
+        result_1 = namemaker.estimate_syllables('testit')
+        result_2 = namemaker.estimate_syllables('test-it')
+        result_3 = namemaker.estimate_syllables('test it')
+        self.assertEqual(result_1, result_2)
+        self.assertEqual(result_1, result_3)
+        self.assertEqual(result_1, 2)
 
 
 

@@ -77,7 +77,9 @@ class NameSet():
 
     def copy(self):
         ''' Creates and returns a new NameSet object identical to this one.
-            This is a deep copy.'''
+            This is a deep copy.
+            If this NameSet has its history linked to any other NameSets,
+            the copy's history will not be linked.'''
         copy_set = NameSet(order = self._order, name_len_func = self.get_name_len_func())
         copy_set._names = self._names[:]
         copy_set._names_set = {*self._names_set}
@@ -407,8 +409,28 @@ class NameSet():
         self._history |= set(name_s)
 
     def clear_history(self):
-        ''' Clears the name history of this NameSet.'''
+        ''' Clears the name history of this NameSet.
+            If any other NameSets have their history linked,
+            it clears them, too.'''
         self._history.clear()
+
+    def link_histories(self, *other_name_sets):
+        ''' Links the hisories of this NameSet and all input other_name_sets
+            so that adding a name to the history of one adds it to all.
+            Is useful for groups of NameSets that might generate similar names.
+            The existing histories of all linked NameSets are combined.
+            This breaks any linked histories that this NameSet or any of the
+            other_name_sets already have.'''
+        other_histories = [s._history for s in other_name_sets]
+        shared_history = self._history.union(*other_histories)
+        self._history = shared_history
+        for s in other_name_sets:
+            s._history = shared_history
+
+    def unlink_history(self):
+        ''' Breaks any linked histories that this NameSet might have.
+            It retains its current history.'''
+        self._history = {*self._history}
 
     def _update_avg_name_len(self):
         if self._names:
@@ -667,6 +689,38 @@ def estimate_syllables(name):
 
     return n_syllables
 
+def _make_name_set_for_user_testing(names, **kwargs):
+    if type(names) is NameSet:
+        if 'order' in kwargs and kwargs['order'] != names.get_order():      # message if kwargs conflicts with NameSet attributes
+            print(f'Input NameSet has order {names.get_order()}, but input kwargs specified order {kwargs["order"]}. Using {kwargs["order"]}.')
+        elif names.get_order() != DEFAULT_ORDER and 'order' not in kwargs:  # message if NameSet attributes conflict with defaults, only if not specified in kwargs
+            print(f'Using the input NameSet\'s order {names.get_order()} instead of the default order {DEFAULT_ORDER}.')
+        order = kwargs.pop('order', names.get_order())
+
+        if 'name_len_func' in kwargs and kwargs['name_len_func'] is not names.get_name_len_func():      # message if kwargs conflicts with NameSet attributes
+            print(f'Input NameSet has name_len_func {names.get_name_len_func()}, but input kwargs specified name_len_func {kwargs["name_len_func"]}. Using {kwargs["name_len_func"]}.')
+        elif names.get_name_len_func() is not DEFAULT_NAME_LEN_FUNC and 'name_len_func' not in kwargs:  # message if NameSet attributes conflict with defaults, only if not specified in kwargs
+            print(f'Using the input NameSet\'s name_len_func {names.get_name_len_func()} instead of the default name_len_func {DEFAULT_NAME_LEN_FUNC}.')
+        name_len_func = kwargs.pop('name_len_func', names.get_name_len_func())
+
+    else:
+        order = kwargs.pop('order', DEFAULT_ORDER)
+        name_len_func = kwargs.pop('name_len_func', DEFAULT_NAME_LEN_FUNC)
+
+    clean_up = kwargs.pop('clean_up', True)     # The default value for 'clean_up' is based on the default in make_name_set
+    name_set = make_name_set(names, order, name_len_func, clean_up)
+
+    if type(names) is NameSet:
+        if list(names) != list(name_set):
+            print('These names were generated with a cleaned-up version of your input NameSet.\n'
+                  'To suppress this behavior, use the keyword argument clean_up = False')
+        history = names.get_history()
+        if history:
+            print(f'The input NameSet already has {len(history)} names in its history.')
+            name_set.add_to_history(history)    # stay faithful to the input NameSet
+
+    return name_set, kwargs                     # return the kwargs so the calling function doesn't have to get rid of the kwargs that were popped
+
 def sample(names, n = 20, **kwargs):
     ''' Prints a sample of n names based on the input collection of names.
         Uses the input **kwargs in make_name_set and in calls to
@@ -686,31 +740,63 @@ def sample(names, n = 20, **kwargs):
         n:        int, the number of samples to print.
         **kwargs: Any keyword arguments that are accepted by make_name_set or
                   NameSet.make_name'''
-    if type(names) is NameSet:
-        if 'order' in kwargs and kwargs['order'] != names.get_order():      # message if kwargs conflicts with NameSet attributes
-            print(f'Input NameSet has order {names.get_order()}, but input kwargs specified order {kwargs["order"]}. Using {kwargs["order"]}.')
-        elif names.get_order() != DEFAULT_ORDER and 'order' not in kwargs:  # message if NameSet attributes conflict with defaults, only if not specified in kwargs
-            print(f'Using the input NameSet\'s order {names.get_order()} instead of the default order {DEFAULT_ORDER}.')
-        order = kwargs.get('order', names.get_order())
 
-        if 'name_len_func' in kwargs and kwargs['name_len_func'] is not names.get_name_len_func():      # message if kwargs conflicts with NameSet attributes
-            print(f'Input NameSet has name_len_func {names.get_name_len_func()}, but input kwargs specified name_len_func {kwargs["name_len_func"]}. Using {kwargs["name_len_func"]}.')
-        elif names.get_name_len_func() is not DEFAULT_NAME_LEN_FUNC and 'name_len_func' not in kwargs:  # message if NameSet attributes conflict with defaults, only if not specified in kwargs
-            print(f'Using the input NameSet\'s name_len_func {names.get_name_len_func()} instead of the default name_len_func {DEFAULT_NAME_LEN_FUNC}.')
-        name_len_func = kwargs.get('name_len_func', names.get_name_len_func())
-
-    else:
-        order = kwargs.get('order', DEFAULT_ORDER)
-        name_len_func = kwargs.get('name_len_func', DEFAULT_NAME_LEN_FUNC)
-    
-    name_set = make_name_set(names, order, name_len_func, clean_up = kwargs.get('clean_up', True))      # The default value for 'clean' is based on the default in make_name_set
-    if type(names) is NameSet and list(names) != list(name_set):
-        print('These names were generated with a cleaned-up version of your input NameSet.\n'
-              'To suppress this behavior, use the keyword argument clean_up = False')
-    kwargs = {key: value for key, value in kwargs.items() if key not in ['order', 'name_len_func', 'clean_up']}     # get rid of make_name_set kwargs from kwargs
-
+    name_set, kwargs = _make_name_set_for_user_testing(names, **kwargs)
     for i in range(n):
         print(name_set.make_name(**kwargs))
+
+def stress_test(names, **kwargs):
+    ''' Generates names until NameSet.make_name fails once, then prints
+        the number of names generated compared to the number
+        of names in the training data.
+        Uses the input **kwargs in make_name_set and in calls to
+        NameSet.make_name.
+        It can take several seconds or minutes before make_name fails,
+        if it ever does.
+        Cancelling this function early will still display the test results.
+        The intent of this function is to judge how many names can be
+        generated from the inputs before no more can be made without repeats.
+        I.e. to see how long it takes to fill up a NameSet's history.
+        It is not intended for use in production code.
+        Values specified in **kwargs are prioritized,
+        followed by attributes of the input NameSet (if names is a NameSet),
+        followed by default values.
+        This function operates on a copy of names,
+        so the input list, set, or NameSet of names will not be modified.
+        
+        INPUTS:
+        names:    Any collection of names, a NameSet, or the name of a
+                  file where names are stored.
+        **kwargs: Any keyword arguments that are accepted by make_name_set or
+                  NameSet.make_name
+                  Note: Setting add_to_history = False will mess up unique
+                  name reporting.'''
+    name_set, kwargs = _make_name_set_for_user_testing(names, **kwargs)
+    if name_set.get_history():
+        print('The test will run on a copy of the NameSet with no history.')
+    name_set.clear_history()
+
+    if len(name_set) == 0:                      # insanity check
+        print('Cannot generate any names from an empty NameSet.')
+        return
+
+    n_training = len(name_set)
+    n_made = 0
+    try:
+        while name_set.make_name(**kwargs):     # make names until there's a failure
+            n_made += 1
+    except KeyboardInterrupt:
+        print('The test was cancelled before a failure occurred.')
+    n_unique = len(name_set.get_history())
+
+    if not kwargs.get('add_to_history', True):
+        print('Info on unique generated names will not be accurate'
+              '\nbecause add_to_history is False.')
+    print(f'Training names: {n_training}')
+    print(f'Unique generated names: {n_unique}')
+    print(f'Total generated names: {n_made}')
+    print(f'Generated names per training name: {round(n_made/n_training, 1)}')
+    print(f'Percent of generated names that are unique: {round(100*n_unique/n_made, 1)}%')
 
 def is_clean(name, banned_words):
     ''' Returns True if the name is clean,

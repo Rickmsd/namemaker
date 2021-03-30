@@ -37,10 +37,6 @@ Axbridge
 Axminster
 Aylesbury
 Aylsham
-
-
-
-
 Bacup
 Bakewell
 Bampton
@@ -162,10 +158,6 @@ Bury
 Bury St Edmunds
 Bushey
 Buxton
-
-
-
-
 Caistor
 Callington
 Calne
@@ -250,10 +242,6 @@ Croydon
 Crowland
 Crowle
 Cullompton
-
-
-
-
 Dagenham
 Dalton-in-Furness
 Darley Dale
@@ -288,10 +276,6 @@ Dulverton
 Dunstable
 Dunwich
 Dursley
-
-
-
-
 Ealing
 Earby
 Earl Shilton
@@ -324,10 +308,6 @@ Eton
 Evesham
 Exmouth
 Eye
-
-
-
-
 Fairford
 Fakenham
 Falmouth
@@ -356,10 +336,6 @@ Framlingham
 Frinton and Walton
 Frodsham
 Frome
-
-
-
-
 Gainsborough
 Garstang
 Gateshead
@@ -384,10 +360,6 @@ Greater Willington
 Grimsby
 Guildford
 Guisborough
-
-
-
-
 Hadleigh
 Hailsham
 Halesowen
@@ -465,10 +437,6 @@ Hunstanton
 Huntingdon
 Hyde
 Hythe
-
-
-
-
 Ilford
 Ilfracombe
 Ilkeston
@@ -479,15 +447,7 @@ Ingleby Barwick
 Ipswich
 Irthlingborough
 Ivybridge
-
-
-
-
 Jarrow
-
-
-
-
 Keighley
 Kempston
 Kendal
@@ -512,10 +472,6 @@ Kirkham
 Kirton-in-Lindsey
 Knaresborough
 Knutsford
-
-
-
-
 Langport
 Launceston
 Leatherhead
@@ -556,10 +512,6 @@ Lymington
 Lynton & Lynmouth
 Lytchett Minster & Upton
 Lytham St Annes
-
-
-
-
 Mablethorpe and Sutton
 Macclesfield
 Madeley
@@ -615,10 +567,6 @@ Morley
 Morpeth
 Mossley
 Much Wenlock
-
-
-
-
 Nailsea
 Nailsworth
 Nantwich
@@ -657,10 +605,6 @@ Northleach with Eastington
 Northwich
 Norton-on-Derwent
 Nuneaton
-
-
-
-
 Oakengates
 Oakham
 Okehampton
@@ -677,10 +621,6 @@ Oswestry
 Otley
 Ottery St Mary
 Oundle
-
-
-
-
 Paddock Wood
 Padiham
 Padstow
@@ -718,16 +658,8 @@ Princes Risborough
 Prudhoe
 Pudsey
 Purley
-
-
-
-
 Quedgeley
 Queenborough-in-Sheppey
-
-
-
-
 Radstock
 Ramsey
 Ramsgate
@@ -765,10 +697,6 @@ Rugeley
 Rushden
 Ryde
 Rye
-
-
-
-
 Saffron Walden
 St Austell
 St Blaise
@@ -892,10 +820,6 @@ Swanley
 Swanscombe and Greenhithe
 Swindon
 Syston
-
-
-
-
 Tadcaster
 Tadley
 Tamworth
@@ -935,26 +859,14 @@ Tring
 Trowbridge
 Twickenham
 Tynemouth
-
-
-
-
 Uckfield
 Ulverston
 Uppingham
 Upton-upon-Severn
 Uttoxeter
 Uxbridge
-
-
-
-
 Ventnor
 Verwood
-
-
-
-
 Wadebridge
 Wadhurst
 Wainfleet All Saints
@@ -1050,20 +962,11 @@ Worthing
 Wotton-under-Edge
 Wragby
 Wymondham
-
-
-
-
 Yarm
 Yarmouth
 Yate
 Yateley
 Yeovil
-
-
-
-
-
 Basildon
 Bracknell
 Milton Keynes
