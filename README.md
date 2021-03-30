@@ -1,6 +1,15 @@
 # What is namemaker?
 Namemaker is a random name generator.  Use it to procedurally create names for places and characters in a game, or to break through writer's block while trying to come up with handcrafted names.  Input your own training data to make any kind of names you want.
 
+# Useful features
+* Several built-in training data sets to get different "sounds" to your names.
+* Ability to use your own training data.
+* Control over the realism and length of generated names.
+* Full control of the RNG to make name generation repeatable.
+* Ability to ban profanity or other words from appearing in generated names.
+* Ability to place arbitrary restrictions on the generated names.
+* Avoidance of repeated names by default.
+
 # How to install
 Use pip in your command line.
 
@@ -183,13 +192,13 @@ my_name_set = make_name_set(my_names, clean_up = False)
 
 In this example, you're not removing any symbols from the ends of your names, but are still removing any empty names and names that were saved in your file as 'N/A' or 'null'.  The ability to specify names that count as “blank” allows you to copy from messy or incomplete data sources without having to do too much manual cleanup.
 
-Functions dedicated to importing and cleaning data are listed below:
+## Functions for importing and cleaning data:
 
 * `get_names_from_file(file_name)`:  Loads names from a file and returns them in a list.
 * `clean(names)`:  First strips non-alphanumeric characters from the beginning and end of the names, then removes any blank names from the list.  Returns a new list.
 * `clean_blanks(names, blank_names = [])`:  Gets rid of any names that consist solely of non-alphanumeric characters, as well as any names specified in `blank_names`.  Returns a new list.
 * `clean_extra_symbols(names)`:  Strips non-alphanumeric characters from the beginning and end of the names.  Returns a new list.
-* `strip_non_alnum(name)`:   Strips non-alphanumeric characters from the beginning and end of a single name.  Returns a string.
+* `strip_non_alnum(name)`:  Strips non-alphanumeric characters from the beginning and end of a single name.  Returns a string.
 
 # Manipulating NameSets
 While a typical usage of namemaker involves loading up some training data into a NameSet and using it as-is, NameSets can also be combined and altered in a variety of ways.
@@ -250,7 +259,7 @@ OrderWarning: Adding NameSet of order 3 to NameSet of order 2. Result will be of
 # Managing the Random Number Generator
 Namemaker uses Python's built-in `random` module, but uses its own instance of `random.Random` to avoid interfering with the state of the `random` module.  You can access the RNG with the `namemaker.get_rng` function.  Being an instance of `random.Random`, it supports all the same methods as the `random` module itself, like `getstate`, `setstate`, and `seed`.  You can also replace the default RNG with your own RNG, using `namemaker.set_rng(my_rng)`.  The only requirement on `my_rng` is that it has a `choice` method that takes in a list and returns a single element from that list.
 
-# Misc. other functions
+# Misc. functions
 `estimate_syllables(name)`:  Returns an estimate of how many syllables are in a string.  It's only an estimate, but gets pretty close for most strings.  It can be used as a `name_len_func`.
 
 `stress_test(names, **kwargs)`:  Similar to sample, but instead of printing names, it runs NameSet.make_name until it fails to make a name, then prints info about how many names were made compared to the number of names in the training data.  It probably isn't of much practical use, as most NameSets will generate thousands of names before failing.  Its main purpose is to show that most training data can generate more than enough names for practical purposes, even when avoiding repeats.

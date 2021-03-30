@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name = 'namemaker',
-    version = '1.0.1',
+    version = '1.1',
     author = 'Rick Moyer',
     author_email = 'rickmoyer.sd@gmail.com',
     description = 'A random name generator using Markov chains.',

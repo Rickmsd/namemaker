@@ -1000,8 +1000,44 @@ class RNGTests(unittest.TestCase):
         new_rng = random.Random()
         namemaker.set_rng(new_rng)
         self.assertIs(new_rng, namemaker.rng)
-    
 
+class MiscTests(unittest.TestCase):
+    def test_sample(self):
+        pass    ## TODO: figure out how to test printed output
+
+    def test_stress_test(self):
+        pass    ## TODO: figure out how to test printed output
+
+    def test_estimate_syllables(self):
+        result_1 = namemaker.estimate_syllables('avacado')
+        result_2 = namemaker.estimate_syllables('avacados')
+        self.assertEqual(result_1, result_2)
+        self.assertTrue(3 <= result_1 <= 5)     # don't be off by more than 1 syllable with a 4 syllable word (+/- 25%)
+
+        result = namemaker.estimate_syllables('antidisestablishmentarianism')
+        self.assertTrue(9 <= result <= 15)      # don't be off by more than 3 syllable with a 12 syllable word (+/- 25%)
+
+        self.assertEqual(namemaker.estimate_syllables(''), 0)
+
+        # add the proper number of syllables for each number
+        self.assertEqual(namemaker.estimate_syllables('0'), 2)
+        self.assertEqual(namemaker.estimate_syllables('1'), 1)
+        self.assertEqual(namemaker.estimate_syllables('2'), 1)
+        self.assertEqual(namemaker.estimate_syllables('3'), 1)
+        self.assertEqual(namemaker.estimate_syllables('4'), 1)
+        self.assertEqual(namemaker.estimate_syllables('5'), 1)
+        self.assertEqual(namemaker.estimate_syllables('6'), 1)
+        self.assertEqual(namemaker.estimate_syllables('7'), 2)
+        self.assertEqual(namemaker.estimate_syllables('8'), 1)
+        self.assertEqual(namemaker.estimate_syllables('9'), 1)
+
+        # make sure hyphens and spaces work correctly
+        result_1 = namemaker.estimate_syllables('testit')
+        result_2 = namemaker.estimate_syllables('test-it')
+        result_3 = namemaker.estimate_syllables('test it')
+        self.assertEqual(result_1, result_2)
+        self.assertEqual(result_1, result_3)
+        self.assertEqual(result_1, 2)
 
 
 
