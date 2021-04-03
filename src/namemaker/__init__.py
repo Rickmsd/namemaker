@@ -796,7 +796,7 @@ def stress_test(names, **kwargs):
     print(f'Unique generated names: {n_unique}')
     print(f'Total generated names: {n_made}')
     print(f'Generated names per training name: {round(n_made/n_training, 1)}')
-    print(f'Percent of generated names that are unique: {round(100*n_unique/n_made, 1)}%')
+    print(f'Percent of generated names that are unique: {round(100*n_unique/n_made, 1) if n_made else 0}%')
 
 def is_clean(name, banned_words):
     ''' Returns True if the name is clean,

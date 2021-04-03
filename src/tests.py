@@ -1006,7 +1006,8 @@ class MiscTests(unittest.TestCase):
         pass    ## TODO: figure out how to test printed output
 
     def test_stress_test(self):
-        pass    ## TODO: figure out how to test printed output
+        namemaker.stress_test([])
+        namemaker.stress_test(['hi'])
 
     def test_estimate_syllables(self):
         result_1 = namemaker.estimate_syllables('avacado')

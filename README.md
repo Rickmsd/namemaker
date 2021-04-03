@@ -233,9 +233,19 @@ NameSets have some other methods to modify themselves, too:
 
 `add_to_history(name_s)`:  Adds the input name or collection of names to the NameSet’s history.
 
-`link_histories(*other_name_sets)`:  (New in version 1.1) Links the history of the NameSet to the histories of all the other_name_sets.  Adding names to the history of one will add them to all the linked histories.  This is useful if you have several NameSets that might generate similar names, but don't want any repeated names within the group.  This method breaks any existing linked histories in the NameSet and the other_name_sets.
+`link_histories(*other_name_sets)`:  (New in version 1.1) Links the history of the NameSet to the histories of all the other_name_sets.  Adding a name to the history of one will add it to all the linked histories.  This is useful if you have several NameSets that might generate similar names, but don't want any repeated names within the group.  This method breaks any existing linked histories in the NameSet and the other_name_sets.
 
 `unlink_history()`:  (New in version 1.1) Breaks any linked histories that the NameSet might have, without breaking the links among other NameSets in the linked group.
+
+Example of history linking:
+
+```python
+male_names = namemaker.make_name_set('male first names', order = 2)
+female_names = namemaker.make_name_set('female first names', order = 2)
+male_names.link_histories(female_names)
+```
+
+In this case, you might want to generate male or female names, without repeating a previous male name as a female name or vice versa.
 
 # Warnings
 Namemaker uses a few custom warnings to avoid interfering with any warning filters you've set up in your own code.
