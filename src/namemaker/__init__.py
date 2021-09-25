@@ -105,7 +105,7 @@ class NameSet():
 
     def __iter__(self):
         ''' Iterate over this NameSet's training data.'''
-        return _NameSetIterator(self)
+        return (name for name in self._names)
 
     def __len__(self):
         ''' Length of this NameSet's training data.'''
@@ -210,7 +210,7 @@ class NameSet():
 ##        self._update_avg_name_len()
 ##        return self
 
-        # Removing every name of other_names from this NameSet might not be very performant because of repeated calles to list.remove,
+        # Removing every name of other_names from this NameSet might not be very performant because of repeated calls to list.remove,
         # but it allows subtraction to remove only the number of repeated names that were in other_names.
         # I.e. if this NameSet has the name 'John' in it three times, and the subtracted other_names has 'John' in it two times,
         # there will still be one instance of 'John' in this NameSet after subtraction.
@@ -545,18 +545,6 @@ class NameSet():
             self.add_to_history(name)
         return name
 
-class _NameSetIterator():
-    def __init__(self, name_set):
-        self.name_set = name_set
-        self.index = 0
-
-    def __next__(self):
-        if self.index < len(self.name_set._names):
-            result = self.name_set[self.index]
-            self.index += 1
-            return result
-        else:
-            raise StopIteration
 
 '=================================================================== User functions =========================================================='
 
