@@ -315,15 +315,11 @@ Greath
 Absurd town names.  The `validation_func` is preventing odd combinations of prepositions.  You may find it necessary to add others if you use this recipe for real:
 
 ```python
+>>> preposition_combos = ['on-upon', 'upon-on', 'on-by', 'by-on', 'in-on', 'on-in']
 >>> namemaker.sample('England towns', n = 10,
        n_candidates = 20,  # Make lots of candidates and choose the longest one
        pref_candidate = namemaker.MAX,
-       validation_func = lambda name: not [x for x in ['on-upon',
-                                                       'upon-on',
-                                                       'on-by',
-                                                       'by-on',
-                                                       'in-on',
-                                                       'on-in'] if x in name]
+       validation_func = lambda name: not any(x in name for x in preposition_combos)
                                       and not name.endswith(' and'))
 Eastleby-in-Furntworthwellingham
 Whitnes-upon-Cleobury
@@ -342,10 +338,10 @@ Fantastical or evil-sounding item names (e.g. “The Sword of ...”):
 ```python
 >>> namemaker.sample('PA towns', n = 10,
          order = 1,
-         name_len_func = lambda name: len([n for n in name if n not in 'AEIOUaeiou']), # don't count vowels toward name length
+         name_len_func = lambda name: sum(letter not in 'AEIOUaeiou' for letter in 'name'), # don't count vowels toward name length
          pref_candidate = namemaker.MAX,                                       # maximize consonants
          validation_func = lambda name: 4 < len(name) <= 8
-                                        and [n for n in name if n in 'aeiou']) # make sure there's a vowel in there somewhere
+                                        and any(n in 'aeiou' for n in name)) # make sure there's a vowel in there somewhere
 Fildron
 Sootostz
 Cilllch
