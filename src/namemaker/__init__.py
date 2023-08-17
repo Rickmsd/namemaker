@@ -548,7 +548,7 @@ class NameSet():
 
 '=================================================================== User functions =========================================================='
 
-def make_name_set(names, order = DEFAULT_ORDER, name_len_func = DEFAULT_NAME_LEN_FUNC, clean_up = True):   # if changing deefault clean_up, also change in sample
+def make_name_set(names, order = DEFAULT_ORDER, name_len_func = DEFAULT_NAME_LEN_FUNC, clean_up = True):   # if changing default clean_up, also change in sample
     ''' Creates and returns a NameSet object
         with the input names as training data.
         INPUTS:
