@@ -985,6 +985,15 @@ class BannedWordTests(unittest.TestCase):
         self.assertEqual(result, {'hey', 'hi'})
         self.assertIsNot(result, namemaker.banned_words)
 
+    def test_is_clean(self):
+        banned_list = ['hey', 'hi', 'Sup']
+        self.assertTrue(namemaker.is_clean('hello', banned_list))
+        self.assertFalse(namemaker.is_clean('hey', banned_list))
+        self.assertFalse(namemaker.is_clean('they', banned_list))
+        self.assertFalse(namemaker.is_clean('SHIP', banned_list))
+        self.assertFalse(namemaker.is_clean('supper', banned_list))
+        
+
 class RNGTests(unittest.TestCase):
     def setUp(self):
         self.rng = namemaker.rng
@@ -1036,10 +1045,22 @@ class MiscTests(unittest.TestCase):
         result_1 = namemaker.estimate_syllables('testit')
         result_2 = namemaker.estimate_syllables('test-it')
         result_3 = namemaker.estimate_syllables('test it')
-        self.assertEqual(result_1, result_2)
-        self.assertEqual(result_1, result_3)
-        self.assertEqual(result_1, 2)
+        self.assertTrue(result_1 == result_2 == result_3 == 2)
 
+    def test_validate_town(self):
+        self.assertTrue(namemaker.validate_town('Testville'))
+        self.assertTrue(namemaker.validate_town('North Testville'))
+        self.assertTrue(namemaker.validate_town('Testville-in-Testington'))
+        self.assertTrue(namemaker.validate_town('Testington-in-Testminster'))   # make sure the 'on-in' doesn't throw it off when part of a larger word
+        self.assertTrue(namemaker.validate_town('Testville by the Sea'))
+
+        self.assertFalse(namemaker.validate_town('Testvill'))
+        self.assertFalse(namemaker.validate_town('Nort Testville'))
+        self.assertFalse(namemaker.validate_town('North testville'))
+        self.assertFalse(namemaker.validate_town('Testville-in-testington'))
+        self.assertFalse(namemaker.validate_town('Testville-on-in-Testington'))
+        self.assertFalse(namemaker.validate_town('Testville on in Testington'))
+        self.assertFalse(namemaker.validate_town('Testville on-in-Testington'))
 
 
 

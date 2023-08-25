@@ -155,7 +155,7 @@ validation_func = None
 
 Starting simple, `exclude_real_names` will keep `make_name` from outputting any name that's already in your training data.  For instance, a NameSet made with the included `male first names.txt` file won't make the name “John” if `exclude_real_names = True`.
 
-The next two inputs, `exclude_history` and `add_to_history`, are closely related.  By default, each NameSet keeps track of the names it's already made to avoid repeats.  When using `add_to_history = True`, the NameSet will remember the name returned by`make_name`.  If `exclude_history` is True, `make_name` won't make any name that's already remembered in the NameSet's history.
+The next two inputs, `exclude_history` and `add_to_history`, are closely related.  By default, each NameSet keeps track of the names it's already made to avoid repeats.  When using `add_to_history = True`, the NameSet will remember the name returned by `make_name`.  If `exclude_history` is True, `make_name` won't make any name that's already remembered in the NameSet's history.
 
 Internally, `make_name` actually generates a few names and picks what it thinks is the best one.  By default, it chooses the name closest to the average length of the training data, as measured by the NameSet's `name_len_func`.  The number of name candidates it chooses from is specified by `n_candidates`.  The default is 2 because it allows a variety of name lengths to get through, while still weeding out the extremely long or short outliers.  Increasing `n_candidates` reduces the variance in name length (or whatever property is checked by `name_len_func`).
 
@@ -170,7 +170,7 @@ There may be a number of limits you want to impose on the names created by `make
 * Exclude two-word names:  `validation_func = lambda name: ' ' not in name`
 
 ## Banning words
-You can ban certain words from appearing in your names.  The namemaker module has a global set of banned words, which is empty by default.  You can set the banned words or add words to the banned word set with the `set_banned_words` or `add_banned_words` functions.  `get_banned_words` lets you check your banned words.  Banned words are not case sensitive, and `NameSet.make_name` will not return a name that contains a banned word.
+You can ban certain words from appearing in your names.  The namemaker module has a global set of banned words, which is empty by default.  You can set the banned words or add words to the banned word set with the `set_banned_words` or `add_banned_words` functions.  `get_banned_words` lets you check your banned words.  Banned words are not case sensitive, and `NameSet.make_name` will not return a name that contains a banned word anywhere within it.
 
 ## Reasons make_name might fail
 
@@ -180,7 +180,7 @@ You can ban certain words from appearing in your names.  The namemaker module ha
 * There are a lot of names in the NameSet's history, and `exclude_history = True`.  This is not very likely, as a NameSet with a reasonable amount of training data can generate over 10 unique names per training name.  Example: At 277 names, `Greek mythology.txt` is the shortest built-in training data file, and it can generate about 3800 names (with default settings) before failing from a full history.
 
 # Finding and processing training data
-The main advantage of namemaker is its ability to emulate the “sound” of its training data, and, by extension, its customizability by providing your own training data.  The internet is full of lists of things.  A helpful trick is to copy an entire list or table of names into a spreadsheet program like Excel, delete unwanted columns and rows, then save as a tab-delimited text file.  Namemaker expects text files to contain one name per row.
+The main advantage of namemaker is its ability to emulate the “sound” of its training data, and, by extension, its customizability by providing your own training data.  The internet is full of lists of things.  A helpful trick is to copy an entire list or table of names into a spreadsheet program like Excel, delete unwanted columns and rows, then save as a tab-delimited text file.  Namemaker expects text files to contain one name per line.
 
 When importing this data into namemaker, there are several options for cleaning it of unwanted junk.  The default behavior used by `make_name_set` is to first strip off any non-alphanumeric symbols from the beginning and end of each name, then remove any empty names.  There may be cases when you want to avoid this behavior.  For instance, in a training set of band names, “Wham!” would be reduced to “Wham”, robbing you of the opportunity to generate names that end in an exclamation point.  In a case like this, you can call `make_name_set` with `clean = False`.  You can also do the clean-up step manually for greater control, as shown below:
 
@@ -190,7 +190,7 @@ my_names = clean_blanks(my_names, blank_names = ['N/A', 'null'])
 my_name_set = make_name_set(my_names, clean_up = False)
 ```
 
-In this example, you're not removing any symbols from the ends of your names, but are still removing any empty names and names that were saved in your file as 'N/A' or 'null'.  The ability to specify names that count as “blank” allows you to copy from messy or incomplete data sources without having to do too much manual cleanup.
+In this example, you're not removing any symbols from the ends of your names, but are still removing any empty names and names that were saved in your file as 'N/A' or 'null'.  The ability to specify names that count as “blank” allows you to copy from messy or incomplete data sources without doing too much manual cleanup.
 
 ## Functions for importing and cleaning data:
 
@@ -207,7 +207,7 @@ Addition with the `+` and `+=` operators:  This combines two NameSets, or a Name
 
 Subtraction with the `-` and `-=` operators:  This removes any names in one NameSet (or other collection of names) from another NameSet.  If the original NameSet had duplicate names in it, only the amount present in the subtracted NameSet will be removed.  Pseudocode example:  `NameSet(['Jack', 'John', 'John']) - NameSet(['John', 'Jacob']) = NameSet(['Jack', 'John'])`.
 
-Union with the `|` and `|=` operators:  This combines two NameSets, or a NameSet and any other collection of names, but only counts duplicate names once.  Compare to set union.  The result will have no duplicate names.
+Union with the `|` and `|=` operators:  This combines two NameSets, or a NameSet and any other collection of names, but only counts duplicate names once.  Compare to set union.  The result will have no duplicate names, even if the original NameSet had duplicates.
 
 Intersection with the `&` and `&=` operators:  This keeps only the overlapping parts of two NameSets, or a NameSet and any other collection of names.  It's not a direct analog to set intersection because it allows for duplicate names as long as they are present in both original NameSets.  Pseudocode example:  `NameSet(['Jack', 'John', 'John']) & NameSet(['John', 'John', 'John']) = NameSet(['John', 'John'])`.
 
@@ -248,7 +248,7 @@ male_names.link_histories(female_names)
 In this case, you might want to generate male or female names, without repeating a previous male name as a female name or vice versa.
 
 # Warnings
-Namemaker uses a few custom warnings to avoid interfering with any warning filters you've set up in your own code.
+Namemaker uses a few custom warnings to avoid interfering with any warning filters you've set up in your own code. These warnings are subclasses of `NamemakerWarning` (new in version 1.2), which is itself a subclass of `UserWarning`.
 
 `OrderWarning`:  This is raised when an operation is performed on two NameSets of different order.  A warning filter ensures that it gets shown every time such an operation is performed.  Example:
 
@@ -274,8 +274,10 @@ Namemaker uses Python's built-in `random` module, but uses its own instance of `
 
 `stress_test(names, **kwargs)`:  Similar to sample, but instead of printing names, it runs NameSet.make_name until it fails to make a name, then prints info about how many names were made compared to the number of names in the training data.  It probably isn't of much practical use, as most NameSets will generate thousands of names before failing.  Its main purpose is to show that most training data can generate more than enough names for practical purposes, even when avoiding repeats.
 
+`validate_town(name)`:  (New in version 1.2) This is a prebuilt validation_func for town names.  It prevents strange combinations of prepositions (like "on-upon"), misspellings like "-vill", and un-capitalized words in multi-word town names.  Returns True if the name is OK, False otherwise.
+
 # Cookbook
-Here are some different uses of namemaker to provide an idea of how the inputs can be varied for different results.
+Here are some examples to show how namemaker's inputs can be varied for different results.  Check out the example project to see namemaker used in a simple game.
 
 Planet names using the built-in Greek mythology data:
 
@@ -312,25 +314,23 @@ Glen
 Greath
 ```
 
-Absurd town names.  The `validation_func` is preventing odd combinations of prepositions.  You may find it necessary to add others if you use this recipe for real:
+Absurd town names.  The `validation_func` is preventing odd combinations of prepositions and other common problems from the England towns data:
 
 ```python
->>> preposition_combos = ['on-upon', 'upon-on', 'on-by', 'by-on', 'in-on', 'on-in']
 >>> namemaker.sample('England towns', n = 10,
-       n_candidates = 20,  # Make lots of candidates and choose the longest one
+       n_candidates = 20,  	# Make lots of candidates and choose the longest one
        pref_candidate = namemaker.MAX,
-       validation_func = lambda name: not any(x in name for x in preposition_combos)
-                                      and not name.endswith(' and'))
-Eastleby-in-Furntworthwellingham
-Whitnes-upon-Cleobury
-Royal Leamingdenham
-Snaith-Wolsingden Aycliffield
-Ching Carlborouch witherley
-Ingleby-in-Furnham Streesallington upon-Humbergh-in-Arden
-Bark-on-West Gringham
-Leominsteland Castleby Welwyn Garst
-New Minsterton Spa
-Madebroughbridge
+       validation_func = namemaker.validate_town)
+Guisbridling's St Anness Heley
+Chapel-en-le-Wilton
+Darwickengatesford
+Dudleigh-on-Tham Steverton
+Melkshallingham Stevertford
+Stockermouthwich
+Greesall with Hykeham
+Frith-Wolswort
+Alnwith-Wester-Marley-in-Penrith
+Chulmleigh-in-Linsteigh
 ```
 
 Fantastical or evil-sounding item names (e.g. “The Sword of ...”):
@@ -338,20 +338,20 @@ Fantastical or evil-sounding item names (e.g. “The Sword of ...”):
 ```python
 >>> namemaker.sample('PA towns', n = 10,
          order = 1,
-         name_len_func = lambda name: sum(letter not in 'AEIOUaeiou' for letter in 'name'), # don't count vowels toward name length
-         pref_candidate = namemaker.MAX,                                       # maximize consonants
+         name_len_func = lambda name: sum(letter not in 'AEIOUaeiou' for letter in name),    # Don't count vowels toward name length
+         pref_candidate = namemaker.MAX,                                        	     # Maximize consonants
          validation_func = lambda name: 4 < len(name) <= 8
-                                        and any(n in 'aeiou' for n in name)) # make sure there's a vowel in there somewhere
-Fildron
-Sootostz
-Cilllch
-Coielty
-Sudtenhf
-Bellen
-S. Hing
-Jalllan
-Stilal
-Les Mee
+                                        and any(letter in 'AEIOUaeiou' for letter in name))  # Make sure there's a vowel in there somewhere
+Grway
+Giatrnn
+Bilesy
+Evilerd
+Jormin
+Bewnd
+Beron
+Stavig
+Chanwne
+Pibuth
 ```
 
 # Sources of built-in training data
