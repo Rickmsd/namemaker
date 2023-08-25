@@ -2,6 +2,8 @@
 import random
 import warnings
 import pkgutil
+import re
+import itertools
 
 ## NOTE: name data should be saved as txt files with each entry on its own line
 
@@ -21,14 +23,18 @@ banned_words = set()
 # Define two wrappers of UserWarning to use in cases when two NameSets have mismatched order or name_len_func.
 # Then a filter is set to always show these warnings,
 # without interfering with the default filter or any user-defined filters for UserWarning.
+# All warnings used by namemaker are derived from the base NamemakerWarning
 
-class OrderWarning(UserWarning):
+class NamemakerWarning(UserWarning):
     pass
 
-class NameLenWarning(UserWarning):
+class OrderWarning(NamemakerWarning):
     pass
 
-class CopyWarning(UserWarning):
+class NameLenWarning(NamemakerWarning):
+    pass
+
+class CopyWarning(NamemakerWarning):
     ''' Used if the user tries to call copy.copy on a NameSet,
         since the NameSet's behavior of returning a deep copy in this case
         is contrary to how copy.copy usually works.'''
@@ -352,7 +358,7 @@ class NameSet():
 
         # Update the average name len without calling _update_avg_name_len, because that involves calling name_len_func for every name in the NameSet
         sum_lengths = self._avg_name_len * (len(self) + 1)  # the +1 is because the NameSet is now 1 name shorter than it was when _avg_name_len was calculated
-        sum_lengths -= len(name)
+        sum_lengths -= self._name_len_func(name)
         self._avg_name_len = sum_lengths / len(self)
 
     def remove_duplicates(self):
@@ -434,7 +440,7 @@ class NameSet():
 
     def _update_avg_name_len(self):
         if self._names:
-            self._avg_name_len = sum([self._name_len_func(name) for name in self._names]) / len(self._names)
+            self._avg_name_len = sum(self._name_len_func(name) for name in self._names) / len(self._names)
         else:
             self._avg_name_len = 0
 
@@ -490,7 +496,7 @@ class NameSet():
                                 history if True.
             n_candidates:       int, number of name candidates to create.
                                 The best one (as determined by pref_candidate)
-                                is  returned.
+                                is returned.
             pref_candidate:     The method used to pick the preferred name
                                 candidate. Possible values:
                                 MIN (0): Picks the candidate with the lowest
@@ -514,19 +520,18 @@ class NameSet():
             validation_func = _PASS_EVERYTHING
         
         name_candidates = []
-        for i in range(n_candidates):
-            n_attempts = 0
-            while n_attempts < max_attempts:
+        for _ in range(n_candidates):
+            for __ in range(max_attempts):
                 name = self._make_name_raw()
                 name_valid = bool(name) \
                              and validation_func(name) \
                              and not (exclude_real_names and name in self) \
                              and not (exclude_history and name in self._history) \
-                             and is_clean(name, banned_words)
+                             and is_clean(name, banned_words)   # avoid using get_banned_words for performance reasons.
+                                                                # No need to make a copy of the banned_words list for every name candidate
                 if name_valid:
                     name_candidates.append(name)
                     break
-                n_attempts += 1
 
         if not name_candidates:     # give up if there are no valid candidates
             return ''
@@ -548,7 +553,7 @@ class NameSet():
 
 '=================================================================== User functions =========================================================='
 
-def make_name_set(names, order = DEFAULT_ORDER, name_len_func = DEFAULT_NAME_LEN_FUNC, clean_up = True):   # if changing default clean_up, also change in sample
+def make_name_set(names, order = DEFAULT_ORDER, name_len_func = DEFAULT_NAME_LEN_FUNC, clean_up = True):   # if changing default clean_up, also change in _make_name_set_for_user_testing
     ''' Creates and returns a NameSet object
         with the input names as training data.
         INPUTS:
@@ -632,7 +637,7 @@ def strip_non_alnum(string):
         Doesn't touch non-alphanumeric characters surrounded by
         alphanumeric characters.
         Ex: '? Test-string 2!' becomes 'Test-string 2' '''
-    strip_chars = ''.join([char for char in string if not char.isalnum()])
+    strip_chars = ''.join(char for char in string if not char.isalnum())
     return string.strip(strip_chars)
 
 def estimate_syllables(name):
@@ -676,6 +681,28 @@ def estimate_syllables(name):
         n_syllables += 1    # add a syllable because the current syllable is now finished and hasn't yet been counted
 
     return n_syllables
+
+def validate_town(name):
+    ''' A pre-built validation_func for town names,
+        designed to catch some common problems with town names
+        generated from the built in town name data.
+        It prevents nonsensical preposition combos
+        and malformed town name endings,
+        and ensures that all significant words in the name are capitalized.
+        Returns True if the name is good, False if any problems are found.'''
+    prepositions = ['on', 'in', 'upon', 'by', 'with']
+    separators = [' ', '-']
+    preposition_combos = itertools.product(separators, prepositions, separators, prepositions)  # Include a leading separator so long words ending with a preposition aren't flagged.
+    bad_preposition_strings = [''.join(combo) for combo in preposition_combos]                  # E.g. without the leading seaparator, 'Flonkerton-in-Dunder' would be flagged
+                                                                                                # for containing 'on-in'
+    other_bad_strings = ['Nort ', 'vill ']                          # These are used to catch mispellings at the end of words in multi-word names.
+    bad_endings = [' and', ' ands', ' with', 'vill', 'Nort']
+    name_words = re.split('-|\s', name)                             # Split the name into words separated by either a dash or white space.
+    name_words = [word for word in name_words if len(word) > 4]     # Don't care about prepositions (such as "upon") being capitalized.
+    uppercase_letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    return is_clean(name, bad_preposition_strings + other_bad_strings) \
+           and not any(name.endswith(ending) for ending in bad_endings) \
+           and all(word[0] in uppercase_letters for word in name_words)
 
 def _make_name_set_for_user_testing(names, **kwargs):
     if type(names) is NameSet:
@@ -737,15 +764,14 @@ def stress_test(names, **kwargs):
     ''' Generates names until NameSet.make_name fails once, then prints
         the number of names generated compared to the number
         of names in the training data.
-        Uses the input **kwargs in make_name_set and in calls to
-        NameSet.make_name.
-        It can take several seconds or minutes before make_name fails,
-        if it ever does.
-        Cancelling this function early will still display the test results.
         The intent of this function is to judge how many names can be
         generated from the inputs before no more can be made without repeats.
         I.e. to see how long it takes to fill up a NameSet's history.
         It is not intended for use in production code.
+        It can take several seconds or minutes before make_name fails,
+        if it ever does.
+        This function catches KeyboardInterrupt exceptions
+        in order to display the test results so far, then returns.
         Values specified in **kwargs are prioritized,
         followed by attributes of the input NameSet (if names is a NameSet),
         followed by default values.
@@ -799,11 +825,7 @@ def is_clean(name, banned_words):
         name:         A string.
         banned_words: A collection of words that are not allowed in name.'''
     casefolded_name = name.casefold()
-    for word in banned_words:   # avoid using get_banned_words for performance reasons. No need to make a copy of the banned_words list for every name candidate
-        if word.casefold() in casefolded_name:
-            return False
-    else:
-        return True
+    return not any(word.casefold() in casefolded_name for word in banned_words)
 
 def set_banned_words(words):
     ''' Sets this module's banned_words set to be the input collection of words.
